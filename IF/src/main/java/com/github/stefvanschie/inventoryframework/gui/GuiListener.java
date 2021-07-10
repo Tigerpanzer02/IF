@@ -2,23 +2,28 @@ package com.github.stefvanschie.inventoryframework.gui;
 
 import com.github.stefvanschie.inventoryframework.gui.type.*;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
+import com.github.stefvanschie.inventoryframework.util.VersionUtil;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.server.PluginDisableEvent;
-import org.bukkit.inventory.*;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Listens to events for {@link Gui}s. Only one instance of this class gets constructed.
@@ -48,16 +53,16 @@ public class GuiListener implements Listener {
             return;
         }
 
-        InventoryView view = event.getView();
-        Inventory inventory = view.getInventory(event.getRawSlot());
-
-        if (inventory == null) {
+        if (event.getSlotType() == InventoryType.SlotType.OUTSIDE) {
             gui.callOnOutsideClick(event);
             return;
         }
 
+        int rawSlot = event.getRawSlot();
+        int eventSlot = event.getSlot();
+
         gui.callOnGlobalClick(event);
-        if (inventory.equals(view.getTopInventory())) {
+        if (rawSlot == eventSlot) {
             gui.callOnTopClick(event);
         } else {
             gui.callOnBottomClick(event);
@@ -186,39 +191,6 @@ public class GuiListener implements Listener {
     }
 
     /**
-     * Handles users picking up items while their bottom inventory is in use.
-     *
-     * @param event the event fired when an entity picks up an item
-     * @since 0.6.1
-     */
-    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-    public void onEntityPickupItem(@NotNull EntityPickupItemEvent event) {
-        if (!(event.getEntity() instanceof HumanEntity)) {
-            return;
-        }
-
-        Gui gui = getGui(((HumanEntity) event.getEntity()).getOpenInventory().getTopInventory());
-
-        if (gui == null || !gui.isPlayerInventoryUsed()) {
-            return;
-        }
-
-        int leftOver = gui.getHumanEntityCache().add((HumanEntity) event.getEntity(), event.getItem().getItemStack());
-
-        if (leftOver == 0) {
-            event.getItem().remove();
-        } else {
-            ItemStack itemStack = event.getItem().getItemStack();
-
-            itemStack.setAmount(leftOver);
-
-            event.getItem().setItemStack(itemStack);
-        }
-
-        event.setCancelled(true);
-    }
-
-    /**
      * Handles drag events
      *
      * @param event the event fired
@@ -239,11 +211,11 @@ public class GuiListener implements Listener {
             boolean top = false, bottom = false;
 
             for (int inventorySlot : event.getRawSlots()) {
-                Inventory inventory = view.getInventory(inventorySlot);
+                int convertedSlot = view.convertSlot(inventorySlot);
 
-                if (view.getTopInventory().equals(inventory)) {
+                if (inventorySlot == convertedSlot) {
                     top = true;
-                } else if (view.getBottomInventory().equals(inventory)) {
+                } else {
                     bottom = true;
                 }
 
@@ -262,6 +234,10 @@ public class GuiListener implements Listener {
                 gui.callOnBottomDrag(event);
             }
         } else {
+            if (VersionUtil.CURRENT.getMinor() < 13) {
+                event.setCancelled(true);
+                return;
+            }
             int index = inventorySlots.toArray(new Integer[0])[0];
             InventoryType.SlotType slotType = view.getSlotType(index);
 
@@ -272,7 +248,7 @@ public class GuiListener implements Listener {
 
             //this is a fake click event, firing this may cause other plugins to function incorrectly, so keep it local
             InventoryClickEvent inventoryClickEvent = new InventoryClickEvent(view, slotType, index, clickType,
-                inventoryAction);
+                    inventoryAction);
 
             onInventoryClick(inventoryClickEvent);
 
@@ -379,7 +355,7 @@ public class GuiListener implements Listener {
      */
     @Nullable
     @Contract(pure = true)
-    private Gui getGui(@NotNull Inventory inventory) {
+    public static Gui getGui(@NotNull Inventory inventory) {
         Gui gui = Gui.getGui(inventory);
 
         if (gui != null) {

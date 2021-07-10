@@ -3,9 +3,12 @@ package com.github.stefvanschie.inventoryframework.gui.type.util;
 import com.github.stefvanschie.inventoryframework.HumanEntityCache;
 import com.github.stefvanschie.inventoryframework.exception.XMLLoadException;
 import com.github.stefvanschie.inventoryframework.gui.GuiListener;
+import com.github.stefvanschie.inventoryframework.gui.NewPickupListener;
+import com.github.stefvanschie.inventoryframework.gui.OldPickupListener;
 import com.github.stefvanschie.inventoryframework.gui.type.*;
 import com.github.stefvanschie.inventoryframework.pane.*;
 import com.github.stefvanschie.inventoryframework.pane.component.*;
+import com.github.stefvanschie.inventoryframework.util.VersionUtil;
 import com.github.stefvanschie.inventoryframework.util.XMLUtil;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.bukkit.Bukkit;
@@ -154,6 +157,11 @@ public abstract class Gui {
     public Gui(@NotNull JavaPlugin plugin) {
         if (!hasRegisteredListeners) {
             Bukkit.getPluginManager().registerEvents(new GuiListener(), plugin);
+            if (VersionUtil.CURRENT.getMinor() < 12) {
+                Bukkit.getPluginManager().registerEvents(new OldPickupListener(), plugin);
+            } else {
+                Bukkit.getPluginManager().registerEvents(new NewPickupListener(), plugin);
+            }
 
             hasRegisteredListeners = true;
         }

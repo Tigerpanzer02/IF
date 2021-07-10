@@ -6,8 +6,9 @@ import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
 import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.exception.XMLLoadException;
 import com.github.stefvanschie.inventoryframework.exception.XMLReflectionException;
+import com.github.stefvanschie.inventoryframework.util.EnchantmentUtil;
 import com.github.stefvanschie.inventoryframework.util.SkullUtil;
-import com.github.stefvanschie.inventoryframework.util.UUIDTagType;
+import com.github.stefvanschie.inventoryframework.util.UUIDMetaUtil;
 import com.github.stefvanschie.inventoryframework.util.XMLUtil;
 import com.google.common.primitives.Primitives;
 import org.apache.commons.lang3.reflect.MethodUtils;
@@ -371,9 +372,7 @@ public abstract class Pane {
                                 if (!innerNode.getNodeName().equals("enchantment"))
                                     continue;
 
-                                Enchantment enchantment = Enchantment.getByKey(NamespacedKey.minecraft(
-                                    innerElementChild.getAttribute("id").toUpperCase(Locale.getDefault())
-                                ));
+                                Enchantment enchantment = EnchantmentUtil.getEnchantment(innerElementChild.getAttribute("id"));
 
                                 if (enchantment == null) {
                                     throw new XMLLoadException("Enchantment cannot be found");
@@ -554,7 +553,7 @@ public abstract class Pane {
             return null;
         }
 
-        UUID uuid = meta.getPersistentDataContainer().get(GuiItem.KEY_UUID, UUIDTagType.INSTANCE);
+        UUID uuid = UUIDMetaUtil.getUUID(meta);
         if (uuid == null) {
             return null;
         }

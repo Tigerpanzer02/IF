@@ -1,14 +1,13 @@
 package com.github.stefvanschie.inventoryframework.pane.component;
 
+import com.github.stefvanschie.inventoryframework.exception.XMLLoadException;
+import com.github.stefvanschie.inventoryframework.gui.GuiItem;
 import com.github.stefvanschie.inventoryframework.gui.InventoryComponent;
 import com.github.stefvanschie.inventoryframework.gui.type.util.Gui;
-import com.github.stefvanschie.inventoryframework.gui.GuiItem;
-import com.github.stefvanschie.inventoryframework.exception.XMLLoadException;
 import com.github.stefvanschie.inventoryframework.pane.OutlinePane;
 import com.github.stefvanschie.inventoryframework.pane.Pane;
-import org.bukkit.Material;
+import com.github.stefvanschie.inventoryframework.util.ItemUtil;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Element;
@@ -44,11 +43,11 @@ public class ToggleButton extends Pane {
         super(length, height);
 
         this.enabledPane = new OutlinePane(0, 0, length, height);
-        this.enabledPane.addItem(new GuiItem(new ItemStack(Material.GREEN_STAINED_GLASS_PANE)));
+        this.enabledPane.addItem(new GuiItem(ItemUtil.getGreenStainedGlassPane()));
         this.enabledPane.setRepeat(true);
 
         this.disabledPane = new OutlinePane(0, 0, length, height);
-        this.disabledPane.addItem(new GuiItem(new ItemStack(Material.RED_STAINED_GLASS_PANE)));
+        this.disabledPane.addItem(new GuiItem(ItemUtil.getRedStainedGlassPane()));
         this.disabledPane.setRepeat(true);
     }
 
